@@ -8,11 +8,12 @@ class Game{
         this.leader2 = createElement("h2");
 
         this.playerMoving = false;
-        this.right = false;
         this.blast = false;
+        this.liftkeyActive = false;
+
     }
-    getState(){
-        var gameStateRef = database.ref(`users/${secret_word}/getState/`);
+    getState(secret_word){
+        var gameStateRef = database.ref(`users/${secret_word}/get_state/`);
         gameStateRef.on("value", function(data) {
             gameState = data.val();
         });
@@ -20,7 +21,7 @@ class Game{
 
     update(state){
         database.ref(`users/${secret_word}/`).update({
-            gameState: state 
+            game_state: state 
         });
     }
 
@@ -39,80 +40,8 @@ class Game{
                 player.getCount();
             }
         }
-
-        /*player = new Player();
-        playerCount = player.getCount();
-
-        car1 = createSprite(width / 2 - 50, height - 100);
-        car1.addImage("car1", car1_img);
-        car1.scale = 0.07;
-
-        car1.addImage("blast", boom_img);
-
-        car2 = createSprite(width / 2 + 100, height - 100);
-        car2.addImage("car2", car2_img);
-        car2.scale = 0.07;
-
-        car2.addImage("blast", boom_img)
-
-        cars = [car1, car2];
-
-        fuels = new Group();
-        powerCoins = new Group();
-        
-        obstacles = new Group();
-
-        var obstaclesPositions = [
-        { x: width / 2 + 250, y: height - 800, image: obstacle2Image },
-        { x: width / 2 - 150, y: height - 1300, image: obstacle1Image },
-        { x: width / 2 + 250, y: height - 1800, image: obstacle1Image },
-        { x: width / 2 - 180, y: height - 2300, image: obstacle2Image },
-        { x: width / 2, y: height - 2800, image: obstacle2Image },
-        { x: width / 2 - 180, y: height - 3300, image: obstacle1Image },
-        { x: width / 2 + 180, y: height - 3300, image: obstacle2Image },
-        { x: width / 2 + 250, y: height - 3800, image: obstacle2Image },
-        { x: width / 2 - 150, y: height - 4300, image: obstacle1Image },
-        { x: width / 2 + 250, y: height - 4800, image: obstacle2Image },
-        { x: width / 2, y: height - 5300, image: obstacle1Image },
-        { x: width / 2 - 180, y: height - 5500, image: obstacle2Image }
-        ]
-
-        this.addSprites(fuels, 8, fuelImage, 0.02);
-
-        this.addSprites(powerCoins, 18, powerCoinImage, 0.09)
-
-        this.addSprites(
-            obstacles,
-            obstaclesPositions.length,
-            obstacle1Image,
-            0.04,
-            obstaclesPositions
-        );*/
     }
 
-    /*addSprites(spritesGroup, numberOfSprites, spritesImage, scale, positions = []){
-        for (var i = 0; i < numberOfSprites; i++) {
-            var x, y;
-            if(positions.length > 0){
-                x = positions[i].x;
-                y = positions[i].y;
-                spritesImage = positions[i].image;
-            }else{
-                x = random(width/2 + 150, width/2 - 150);
-                y = random(-height * 4.5, height - 400)
-            }
-
-            x = random(width/2 + 150, width/2 - 150);
-            y = random(-height * 4.5, height - 400);
-
-            var sprite = createSprite(x, y);
-            sprite.addImage("sprite", spritesImage);
-
-            sprite.scale = scale;
-            spritesGroup.add(sprite);
-        } 
-    }*/
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     handleElements(){
         welcome.logo.position(40,50);
         welcome.logo.class("gameTitleAfterEffect")
@@ -149,7 +78,7 @@ class Game{
                 var currentlife = allPlayers[plr].life;
 
                 if (currentlife <= 0){
-                    cars[index - 1].changeImage("blast");
+                    cars[index - 1].changeAnimation("blast");
                     cars[index - 1].scale = 0.3;
                 }
 
@@ -173,7 +102,7 @@ class Game{
 
         
                     //cambiar la posicion de la camara 
-                  camera.position.x = cars[index - 1].position.x;
+                  //camera.position.x = cars[index - 1].position.x;
                   camera.position.y = cars[index - 1].position.y;
                 }
 
@@ -199,10 +128,11 @@ class Game{
             }
 
             drawSprites();
-
-            this.showLeaderboard();
-            this.showFuel();
             this.showLife();
+            this.showFuel();
+            this.showLeaderboard();
+
+            
         }
     }
 
@@ -259,6 +189,23 @@ class Game{
             "&emsp;" +
             players[1].score;
         }
+
+        if(players[1].rank ===1) {
+            leader1 =
+            players[1].rank +
+            "&emsp;" +
+            players[1].name +
+            "&emsp;" +
+            players[1].score;
+    
+          leader2 =
+            players[0].rank +
+            "&emsp;" +
+            players[0].name +
+            "&emsp;" +
+            players[0].score;  
+        }
+
         this.leader1.html(leader1);
         this.leader2.html(leader2);
     }
@@ -272,17 +219,16 @@ class Game{
                 player.update();
             }
             if (keyIsDown(LEFT_ARROW) && player.positionX > width / 3 - 50) {
-                this.liftkeyActive = false
+                this.liftkeyActive = true
                 player.positionX -= 5;
                 player.update();
             }
     
             if (keyIsDown(RIGHT_ARROW) && player.positionX < width / 2 + 300) {
-                this.rightkeyActive = true;
+                this.liftkeyActive = false;
                 player.positionX += 5;
                 player.update();
             }
-
         }
 
     }
@@ -312,7 +258,7 @@ class Game{
 
     handleObstacleCollision(index){
         if(cars[index-1].collide(obstacles)){
-            if(this.rightkeyActive){
+            if(this.liftkeyActive){
                 player.positionX -= 100;
             } else {
                 player.positionX += 100
@@ -329,7 +275,7 @@ class Game{
     handleCarACollisionWithCarB(index){
         if (index === 1){
             if (cars[index - 1].collide(cars[1])){
-                if(this.rightkeyActive){
+                if(this.liftkeyActive){
                     player.positionX -= 100;
                 } else {
                     player.positionX += 100
@@ -344,7 +290,7 @@ class Game{
         }
         if (index === 2){
             if(cars[index - 1].collide(cars[0])){
-                if(this.rightkeyActive){
+                if(this. liftkeyActive){
                     player.positionX -= 100;
                 } else {
                     player.positionX += 100
